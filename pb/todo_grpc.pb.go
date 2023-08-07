@@ -26,7 +26,7 @@ type TodoServiceClient interface {
 	FindById(ctx context.Context, in *Id, opts ...grpc.CallOption) (*TodoRes, error)
 	Update(ctx context.Context, in *UpdateTodoReq, opts ...grpc.CallOption) (*TodoRes, error)
 	Delete(ctx context.Context, in *Id, opts ...grpc.CallOption) (*DeleteTodoRes, error)
-	FindAll(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FindTodoRes, error)
+	FindAll(ctx context.Context, in *Empty, opts ...grpc.CallOption) (TodoService_FindAllClient, error)
 }
 
 type todoServiceClient struct {
@@ -73,13 +73,36 @@ func (c *todoServiceClient) Delete(ctx context.Context, in *Id, opts ...grpc.Cal
 	return out, nil
 }
 
-func (c *todoServiceClient) FindAll(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FindTodoRes, error) {
-	out := new(FindTodoRes)
-	err := c.cc.Invoke(ctx, "/todo.TodoService/FindAll", in, out, opts...)
+func (c *todoServiceClient) FindAll(ctx context.Context, in *Empty, opts ...grpc.CallOption) (TodoService_FindAllClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TodoService_ServiceDesc.Streams[0], "/todo.TodoService/FindAll", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &todoServiceFindAllClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type TodoService_FindAllClient interface {
+	Recv() (*TodoRes, error)
+	grpc.ClientStream
+}
+
+type todoServiceFindAllClient struct {
+	grpc.ClientStream
+}
+
+func (x *todoServiceFindAllClient) Recv() (*TodoRes, error) {
+	m := new(TodoRes)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // TodoServiceServer is the server API for TodoService service.
@@ -90,7 +113,7 @@ type TodoServiceServer interface {
 	FindById(context.Context, *Id) (*TodoRes, error)
 	Update(context.Context, *UpdateTodoReq) (*TodoRes, error)
 	Delete(context.Context, *Id) (*DeleteTodoRes, error)
-	FindAll(context.Context, *Empty) (*FindTodoRes, error)
+	FindAll(*Empty, TodoService_FindAllServer) error
 	mustEmbedUnimplementedTodoServiceServer()
 }
 
@@ -110,8 +133,8 @@ func (UnimplementedTodoServiceServer) Update(context.Context, *UpdateTodoReq) (*
 func (UnimplementedTodoServiceServer) Delete(context.Context, *Id) (*DeleteTodoRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedTodoServiceServer) FindAll(context.Context, *Empty) (*FindTodoRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FindAll not implemented")
+func (UnimplementedTodoServiceServer) FindAll(*Empty, TodoService_FindAllServer) error {
+	return status.Errorf(codes.Unimplemented, "method FindAll not implemented")
 }
 func (UnimplementedTodoServiceServer) mustEmbedUnimplementedTodoServiceServer() {}
 
@@ -198,22 +221,25 @@ func _TodoService_Delete_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TodoService_FindAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
+func _TodoService_FindAll_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(TodoServiceServer).FindAll(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/todo.TodoService/FindAll",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TodoServiceServer).FindAll(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(TodoServiceServer).FindAll(m, &todoServiceFindAllServer{stream})
+}
+
+type TodoService_FindAllServer interface {
+	Send(*TodoRes) error
+	grpc.ServerStream
+}
+
+type todoServiceFindAllServer struct {
+	grpc.ServerStream
+}
+
+func (x *todoServiceFindAllServer) Send(m *TodoRes) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // TodoService_ServiceDesc is the grpc.ServiceDesc for TodoService service.
@@ -239,11 +265,13 @@ var TodoService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Delete",
 			Handler:    _TodoService_Delete_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "FindAll",
-			Handler:    _TodoService_FindAll_Handler,
+			StreamName:    "FindAll",
+			Handler:       _TodoService_FindAll_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "todo.proto",
 }

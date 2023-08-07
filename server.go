@@ -7,7 +7,9 @@ import (
 	"github.com/rulanugrh/saturnus/configs"
 	"github.com/rulanugrh/saturnus/helper"
 	"github.com/rulanugrh/saturnus/pb"
+	"github.com/rulanugrh/saturnus/repository"
 	"github.com/rulanugrh/saturnus/services"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
 )
 
@@ -22,7 +24,9 @@ func main() {
 		helper.PrintError(err)
 	}
 
-	srv := &services.TodoServiceServer{}
+	var todoColl *mongo.Collection = configs.MongoColl("todo", configs.DB)
+	todoRepository := repository.TodoRepository(todoColl)
+	srv := services.NewGrpcPost(todoRepository, todoColl)
 	serv := grpc.NewServer()
 
 	pb.RegisterTodoServiceServer(serv, srv)

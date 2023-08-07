@@ -10,7 +10,7 @@ service TodoService {
     rpc FindById(Id) returns (TodoRes);
     rpc Update(UpdateTodoReq) returns (TodoRes);
     rpc Delete(Id) returns (DeleteTodoRes);
-    rpc FindAll(Empty) returns (FindTodoRes);
+    rpc FindAll(Empty) returns (stream TodoRes);
 }
 
 message Empty{}
@@ -20,9 +20,9 @@ message Todo {
     string name = 2;
     Category category = 3;
     bool isDone = 4;
-    google.protobuf.Timestamp create_at = 5;
-    google.protobuf.Timestamp update_at = 6;
-    google.protobuf.Timestamp delete_at = 7;
+    optional google.protobuf.Timestamp create_at = 5;
+    optional google.protobuf.Timestamp update_at = 6;
+    optional google.protobuf.Timestamp delete_at = 7;
 }
 
 message TodoRes {
@@ -63,5 +63,5 @@ message TodoReq {
     Todo todo = 1;
 }
 message Id {
-    string id = 1;
+    optional string id = 1;
 }

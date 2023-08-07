@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/rulanugrh/saturnus/configs"
 	"github.com/rulanugrh/saturnus/entity"
 	"github.com/rulanugrh/saturnus/helper"
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,12 +15,11 @@ type todostruct struct {
 	todoColl *mongo.Collection
 }
 
-func TodoRepository() TodoInterface {
-	var todoColl *mongo.Collection = configs.MongoColl("todo", configs.DB)
+func TodoRepository(todoColl *mongo.Collection) TodoInterface {
 	return &todostruct{todoColl: todoColl}
 }
 
-func (repo *todostruct) CreateTodo(todo *entity.TodoEntityReq) (*entity.TodoEntityDB, error) {
+func (repo *todostruct) CreateTodo(todo *entity.TodoEntity) (*entity.TodoEntity, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -34,43 +32,43 @@ func (repo *todostruct) CreateTodo(todo *entity.TodoEntityReq) (*entity.TodoEnti
 		return nil, helper.PrintError(err)
 	}
 
-	var newTodo entity.TodoEntityDB
+	var newTodo entity.TodoEntity
 	if errs := repo.todoColl.FindOne(ctx, bson.M{"id": res.InsertedID}).Decode(&newTodo); errs != nil {
 		return nil, helper.PrintError(errs)
 	}
 	return &newTodo, nil
 }
 
-func (repo *todostruct) FindById(id string) (*entity.TodoEntityDB, error) {
-	var todo entity.TodoEntityDB
+func (repo *todostruct) FindById(id string) (*entity.TodoEntity, error) {
+	var todo *entity.TodoEntity
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	objId, _ := primitive.ObjectIDFromHex(id)
 
-	if err := repo.todoColl.FindOne(ctx, bson.M{"id": objId}).Decode(&todo); err != nil {
+	if err := repo.todoColl.FindOne(ctx, bson.M{"_id": objId}).Decode(&todo); err != nil {
 		return nil, helper.PrintError(err)
 	}
 
-	return &todo, nil
+	return todo, nil
 }
 
-func (repo *todostruct) FindAll() ([]entity.TodoEntityDB, error) {
-	var todos []entity.TodoEntityDB
+func (repo *todostruct) FindAll() ([]entity.TodoEntity, error) {
+	var todos []entity.TodoEntity
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	result, err := repo.todoColl.Find(ctx, bson.M{})
 	if err != nil {
-		return []entity.TodoEntityDB{}, helper.PrintError(err)
+		return []entity.TodoEntity{}, helper.PrintError(err)
 	}
 
 	defer result.Close(ctx)
 	for result.Next(ctx) {
-		var todo entity.TodoEntityDB
+		var todo entity.TodoEntity
 		if errs := result.Decode(&todo); errs != nil {
-			return []entity.TodoEntityDB{}, helper.PrintError(errs)
+			return []entity.TodoEntity{}, helper.PrintError(errs)
 		}
 
 		todos = append(todos, todo)
@@ -79,21 +77,21 @@ func (repo *todostruct) FindAll() ([]entity.TodoEntityDB, error) {
 	return todos, nil
 }
 
-func (repo *todostruct) Update(id string, todoUpt entity.TodoEntityReq) (entity.TodoEntityDB, error) {
+func (repo *todostruct) Update(id string, todoUpt *entity.TodoEntity) (*entity.TodoEntity, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	
 	objId, _ := primitive.ObjectIDFromHex(id)
 
-	result := repo.todoColl.FindOneAndUpdate(ctx, bson.M{"id":objId}, bson.M{"$set": todoUpt})
+	result := repo.todoColl.FindOneAndUpdate(ctx, bson.M{"_id":objId}, bson.M{"$set": todoUpt})
 
-	var newTodo entity.TodoEntityDB
+	var newTodo entity.TodoEntity
 	if err := result.Decode(&newTodo); err != nil {
-		return entity.TodoEntityDB{}, helper.PrintError(err)
+		return nil, helper.PrintError(err)
 	}
 
-	return newTodo, nil
+	return &newTodo, nil
 }
 
 func (repo *todostruct) Delete(id string) error {
@@ -103,7 +101,7 @@ func (repo *todostruct) Delete(id string) error {
 	
 	objId, _ := primitive.ObjectIDFromHex(id)
 
-	_, err := repo.todoColl.DeleteOne(ctx, bson.M{"id": objId})
+	_, err := repo.todoColl.DeleteOne(ctx, bson.M{"_id": objId})
 	if err != nil {
 		return err
 	}
