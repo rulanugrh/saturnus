@@ -7,6 +7,7 @@ import (
 	"github.com/rulanugrh/saturnus/helper"
 	"github.com/rulanugrh/saturnus/pb"
 	"github.com/rulanugrh/saturnus/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 type TodoNewService struct {
 	pb.UnimplementedTodoServiceServer
@@ -54,4 +55,33 @@ func (serv *TodoNewService) CreateProduct(ctx context.Context, req *pb.TodoReq) 
 
 	return &response, nil
 
+}
+
+func (td *TodoNewService) FindById(ctx context.Context, id *pb.Id) (*pb.TodoRes, error) {
+	oid, _ := primitive.ObjectIDFromHex(id.GetId())
+
+	todo, err := td.repo.FindById(oid)
+	if err != nil {
+		response := pb.TodoRes {
+			Code: 500,
+			Message: "Failure Cannot Find Todo By This ID",
+			Data: nil,
+		}
+
+		return &response, nil
+	}
+
+	response := pb.TodoRes {
+		Code: 200,
+		Message: "Todo can find",
+		Data: &pb.Data{
+			Name: todo.Name,
+			IsDone: todo.IsDone,
+			Category: &pb.Category{
+				Name: todo.Category.Name,
+			},
+		},
+	}
+
+	return &response, nil
 }
