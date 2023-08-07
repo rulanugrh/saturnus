@@ -7,16 +7,19 @@ import (
 	"github.com/rulanugrh/saturnus/helper"
 	"github.com/rulanugrh/saturnus/pb"
 	"github.com/rulanugrh/saturnus/repository"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 type TodoServiceServer struct {
 	pb.UnimplementedTodoServiceServer
 	repo repository.TodoInterface
 }
 
+func NewGrpcPost(repo repository.TodoInterface) *TodoServiceServer {
+	return &TodoServiceServer{repo: repo}
+}
+
 func (serv *TodoServiceServer) CreateProduct(ctx context.Context, req *pb.TodoReq) (*pb.TodoRes, error) {
 	todo := req.GetTodo()
-	data := entity.TodoEntity {
+	data := &entity.TodoEntityReq {
 		Name: todo.GetName(),
 		IsDone: todo.GetIsDone(),
 		Category: entity.CategoryEntity{
@@ -26,7 +29,6 @@ func (serv *TodoServiceServer) CreateProduct(ctx context.Context, req *pb.TodoRe
 		UpdateAt: todo.GetUpdateAt().AsTime(),
 		DeleteAt: todo.GetDeleteAt().AsTime(),
 	}
-
 
 	result, err := serv.repo.CreateTodo(data)
 	if err != nil {
@@ -38,7 +40,7 @@ func (serv *TodoServiceServer) CreateProduct(ctx context.Context, req *pb.TodoRe
 		return &response, helper.PrintError(err)
 	}
 
-	response := pb.TodoRes {
+	response := &pb.TodoRes {
 		Code: 200,
 		Message: "Success To Create Todo",
 		Data: &pb.Data{
@@ -53,14 +55,14 @@ func (serv *TodoServiceServer) CreateProduct(ctx context.Context, req *pb.TodoRe
 		},
 	}
 
-	return &response, nil
+	return response, nil
 
 }
 
 func (td *TodoServiceServer) FindById(ctx context.Context, id *pb.Id) (*pb.TodoRes, error) {
-	oid, _ := primitive.ObjectIDFromHex(id.GetId())
+	ids := id.GetId()
 
-	todo, err := td.repo.FindById(oid)
+	todo, err := td.repo.FindById(ids)
 	if err != nil {
 		response := pb.TodoRes {
 			Code: 500,
@@ -71,7 +73,7 @@ func (td *TodoServiceServer) FindById(ctx context.Context, id *pb.Id) (*pb.TodoR
 		return &response, nil
 	}
 
-	response := pb.TodoRes {
+	response := &pb.TodoRes {
 		Code: 200,
 		Message: "Todo can find",
 		Data: &pb.Data{
@@ -83,5 +85,5 @@ func (td *TodoServiceServer) FindById(ctx context.Context, id *pb.Id) (*pb.TodoR
 		},
 	}
 
-	return &response, nil
+	return response, nil
 }
