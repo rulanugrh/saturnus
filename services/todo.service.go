@@ -7,7 +7,6 @@ import (
 	"github.com/rulanugrh/saturnus/helper"
 	"github.com/rulanugrh/saturnus/pb"
 	"github.com/rulanugrh/saturnus/repository"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 type TodoServiceServer struct {
@@ -154,35 +153,24 @@ func (td *TodoServiceServer) Delete(ctx context.Context, id *pb.Id) (*pb.DeleteT
 	return response, nil
 }
 
-func (td *TodoServiceServer) FindAll(empty *pb.Empty, req pb.TodoService_FindAllServer) error {
-	data := entity.TodoEntity{}
-	cursor, err := td.coll.Find(context.Background(), bson.M{})
+func (td *TodoServiceServer) FindAll(empty *pb.Empty, stream pb.TodoService_FindAllServer) error {
+	data, err := td.repo.FindAll()
 	if err != nil {
 		return helper.PrintError(err)
 	}
-
-	defer cursor.Close(context.Background())
-	for cursor.Next(context.Background()) {
-		err := cursor.Decode(data)
-		if err != nil {
-			return helper.PrintError(err)
-		}
-
-		req.Send(&pb.TodoRes{
+	for _, todo := range data {
+		stream.Send(&pb.TodoRes{
 			Code: 200,
-			Message: "success find all data",
+			Message: "success find data",
 			Data: &pb.Data{
-				Name: data.Name,
-				IsDone: data.IsDone,
+				Name: todo.Name,
+				IsDone: todo.IsDone,
 				Category: &pb.Category{
-					Name: data.Category.Name,
+					Name: todo.Category.Name,
 				},
 			},
 		})
+	
 	}
-	if err := cursor.Err(); err != nil {
-		return helper.PrintError(err)
-	}
-
 	return nil
 }

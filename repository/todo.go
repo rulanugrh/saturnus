@@ -54,24 +54,24 @@ func (repo *todostruct) FindById(id string) (*entity.TodoEntity, error) {
 	return todo, nil
 }
 
-func (repo *todostruct) FindAll() ([]entity.TodoEntity, error) {
-	var todos []entity.TodoEntity
+func (repo *todostruct) FindAll() ([]*entity.TodoEntity, error) {
+	var todos []*entity.TodoEntity
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	result, err := repo.todoColl.Find(ctx, bson.M{})
 	if err != nil {
-		return []entity.TodoEntity{}, helper.PrintError(err)
+		return nil, helper.PrintError(err)
 	}
 
 	defer result.Close(ctx)
 	for result.Next(ctx) {
 		var todo entity.TodoEntity
 		if errs := result.Decode(&todo); errs != nil {
-			return []entity.TodoEntity{}, helper.PrintError(errs)
+			return nil, helper.PrintError(errs)
 		}
 
-		todos = append(todos, todo)
+		todos = append(todos, &todo)
 	}
 
 	return todos, nil

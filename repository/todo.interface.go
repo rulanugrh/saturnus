@@ -9,4 +9,5 @@ type TodoInterface interface {
 	FindById(id string) (*entity.TodoEntity, error)
 	Update(id string, todoUpt *entity.TodoEntity) (*entity.TodoEntity, error)
 	Delete(id string) error
+	FindAll() ([]*entity.TodoEntity, error)
 }
