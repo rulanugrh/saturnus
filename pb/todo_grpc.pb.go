@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type TodoServiceClient interface {
 	CreateProduct(ctx context.Context, in *TodoReq, opts ...grpc.CallOption) (*TodoRes, error)
 	FindById(ctx context.Context, in *Id, opts ...grpc.CallOption) (*TodoRes, error)
-	Update(ctx context.Context, in *Id, opts ...grpc.CallOption) (*TodoRes, error)
+	Update(ctx context.Context, in *UpdateTodoReq, opts ...grpc.CallOption) (*TodoRes, error)
 	Delete(ctx context.Context, in *Id, opts ...grpc.CallOption) (*DeleteTodoRes, error)
 	FindAll(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*FindTodoRes, error)
 }
@@ -55,7 +55,7 @@ func (c *todoServiceClient) FindById(ctx context.Context, in *Id, opts ...grpc.C
 	return out, nil
 }
 
-func (c *todoServiceClient) Update(ctx context.Context, in *Id, opts ...grpc.CallOption) (*TodoRes, error) {
+func (c *todoServiceClient) Update(ctx context.Context, in *UpdateTodoReq, opts ...grpc.CallOption) (*TodoRes, error) {
 	out := new(TodoRes)
 	err := c.cc.Invoke(ctx, "/todo.TodoService/Update", in, out, opts...)
 	if err != nil {
@@ -88,7 +88,7 @@ func (c *todoServiceClient) FindAll(ctx context.Context, in *Empty, opts ...grpc
 type TodoServiceServer interface {
 	CreateProduct(context.Context, *TodoReq) (*TodoRes, error)
 	FindById(context.Context, *Id) (*TodoRes, error)
-	Update(context.Context, *Id) (*TodoRes, error)
+	Update(context.Context, *UpdateTodoReq) (*TodoRes, error)
 	Delete(context.Context, *Id) (*DeleteTodoRes, error)
 	FindAll(context.Context, *Empty) (*FindTodoRes, error)
 	mustEmbedUnimplementedTodoServiceServer()
@@ -104,7 +104,7 @@ func (UnimplementedTodoServiceServer) CreateProduct(context.Context, *TodoReq) (
 func (UnimplementedTodoServiceServer) FindById(context.Context, *Id) (*TodoRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindById not implemented")
 }
-func (UnimplementedTodoServiceServer) Update(context.Context, *Id) (*TodoRes, error) {
+func (UnimplementedTodoServiceServer) Update(context.Context, *UpdateTodoReq) (*TodoRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
 }
 func (UnimplementedTodoServiceServer) Delete(context.Context, *Id) (*DeleteTodoRes, error) {
@@ -163,7 +163,7 @@ func _TodoService_FindById_Handler(srv interface{}, ctx context.Context, dec fun
 }
 
 func _TodoService_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Id)
+	in := new(UpdateTodoReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func _TodoService_Update_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/todo.TodoService/Update",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TodoServiceServer).Update(ctx, req.(*Id))
+		return srv.(TodoServiceServer).Update(ctx, req.(*UpdateTodoReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -40,10 +40,11 @@ func (repo *todostruct) CreateTodo(todo entity.TodoEntity) (entity.TodoEntity, e
 func (repo *todostruct) FindById(id string) (entity.TodoEntity, error) {
 	var todo entity.TodoEntity
 	
+	oid, _ := primitive.ObjectIDFromHex(id)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	if err := repo.todoColl.FindOne(ctx, bson.M{"id":id}).Decode(&todo); err != nil {
+	if err := repo.todoColl.FindOne(ctx, bson.M{"id":oid}).Decode(&todo); err != nil {
 		return entity.TodoEntity{}, helper.PrintError(err)
 	}
 
@@ -78,13 +79,14 @@ func (repo *todostruct) Update(id string, todoUpt entity.TodoEntity) (entity.Tod
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	result, err := repo.todoColl.UpdateOne(ctx, bson.M{"id":id}, bson.M{"$set": todoUpt})
+	oid, _ := primitive.ObjectIDFromHex(id)
+	result, err := repo.todoColl.UpdateOne(ctx, bson.M{"id":oid}, bson.M{"$set": todoUpt})
 	if err != nil {
 		return entity.TodoEntity{}, helper.PrintError(err)
 	}
 
 	if result.MatchedCount == 1 {
-		if err := repo.todoColl.FindOne(ctx, bson.M{"id": id}).Decode(&todo); err != nil {
+		if err := repo.todoColl.FindOne(ctx, bson.M{"id": oid}).Decode(&todo); err != nil {
 			return entity.TodoEntity{}, helper.PrintError(err)
 		}
 	}
@@ -96,7 +98,8 @@ func (repo *todostruct) Delete(id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, err := repo.todoColl.DeleteOne(ctx, bson.M{"id": id})
+	oid, _ := primitive.ObjectIDFromHex(id)
+	_, err := repo.todoColl.DeleteOne(ctx, bson.M{"id": oid})
 	if err != nil {
 		return err
 	}

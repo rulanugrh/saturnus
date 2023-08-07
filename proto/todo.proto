@@ -15,7 +15,7 @@ service TodoService {
 
 message Empty{}
 
-message TodoReq {
+message Todo {
     optional string id = 1;
     string name = 2;
     Category category = 3;
@@ -59,6 +59,9 @@ message Category {
     string name = 2;
 }
 
+message TodoReq {
+    Todo todo = 1;
+}
 message Id {
     string id = 1;
 }
