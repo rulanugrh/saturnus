@@ -14,7 +14,7 @@ import (
 func main() {
 	conf := configs.GetConfig()
 
-	fmt.Println("Starting server on port :50051...")
+	fmt.Printf("Starting server on port %s:%s", conf.Host, conf.Port)
 
 	dsn := fmt.Sprintf("%s:%s", conf.Host, conf.Port)
 	listener, err := net.Listen("tcp", dsn)
@@ -22,7 +22,7 @@ func main() {
 		helper.PrintError(err)
 	}
 
-	srv := &services.TodoNewService{}
+	srv := &services.TodoServiceServer{}
 	serv := grpc.NewServer()
 
 	pb.RegisterTodoServiceServer(serv, srv)

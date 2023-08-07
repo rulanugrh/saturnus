@@ -21,7 +21,7 @@ func TodoRepository() TodoInterface {
 	return &todostruct{todoColl: todoColl}
 }
 
-func (repo *todostruct) CreateTodo(todo entity.TodoEntity) (entity.TodoEntity, error) {
+func (repo *todostruct) CreateTodo(todo entity.TodoEntity) (*entity.TodoEntity, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
@@ -31,10 +31,10 @@ func (repo *todostruct) CreateTodo(todo entity.TodoEntity) (entity.TodoEntity, e
 
 	_, err := repo.todoColl.InsertOne(ctx, &todo)
 	if err != nil {
-		return entity.TodoEntity{}, helper.PrintError(err)
+		return nil, helper.PrintError(err)
 	}
 
-	return todo, nil
+	return &todo, nil
 }
 
 func (repo *todostruct) FindById(id primitive.ObjectID) (entity.TodoEntity, error) {

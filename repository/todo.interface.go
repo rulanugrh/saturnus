@@ -6,7 +6,7 @@ import (
 )
 
 type TodoInterface interface {
-	CreateTodo(todo entity.TodoEntity) (entity.TodoEntity, error)
+	CreateTodo(todo entity.TodoEntity) (*entity.TodoEntity, error)
 	FindById(id primitive.ObjectID) (entity.TodoEntity, error)
 	Update(id primitive.ObjectID, todoUpt entity.TodoEntity) (entity.TodoEntity, error)
 	FindAll() ([]entity.TodoEntity, error)

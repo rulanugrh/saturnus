@@ -9,12 +9,12 @@ import (
 	"github.com/rulanugrh/saturnus/repository"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-type TodoNewService struct {
+type TodoServiceServer struct {
 	pb.UnimplementedTodoServiceServer
 	repo repository.TodoInterface
 }
 
-func (serv *TodoNewService) CreateProduct(ctx context.Context, req *pb.TodoReq) (*pb.TodoRes, error) {
+func (serv *TodoServiceServer) CreateProduct(ctx context.Context, req *pb.TodoReq) (*pb.TodoRes, error) {
 	todo := req.GetTodo()
 	data := entity.TodoEntity {
 		Name: todo.GetName(),
@@ -57,7 +57,7 @@ func (serv *TodoNewService) CreateProduct(ctx context.Context, req *pb.TodoReq) 
 
 }
 
-func (td *TodoNewService) FindById(ctx context.Context, id *pb.Id) (*pb.TodoRes, error) {
+func (td *TodoServiceServer) FindById(ctx context.Context, id *pb.Id) (*pb.TodoRes, error) {
 	oid, _ := primitive.ObjectIDFromHex(id.GetId())
 
 	todo, err := td.repo.FindById(oid)
