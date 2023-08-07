@@ -37,14 +37,13 @@ func (repo *todostruct) CreateTodo(todo entity.TodoEntity) (entity.TodoEntity, e
 	return todo, nil
 }
 
-func (repo *todostruct) FindById(id string) (entity.TodoEntity, error) {
+func (repo *todostruct) FindById(id primitive.ObjectID) (entity.TodoEntity, error) {
 	var todo entity.TodoEntity
 	
-	oid, _ := primitive.ObjectIDFromHex(id)
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	if err := repo.todoColl.FindOne(ctx, bson.M{"id":oid}).Decode(&todo); err != nil {
+	if err := repo.todoColl.FindOne(ctx, bson.M{"id":id}).Decode(&todo); err != nil {
 		return entity.TodoEntity{}, helper.PrintError(err)
 	}
 
@@ -74,19 +73,18 @@ func (repo *todostruct) FindAll() ([]entity.TodoEntity, error) {
 	return todos, nil
 }
 
-func (repo *todostruct) Update(id string, todoUpt entity.TodoEntity) (entity.TodoEntity, error) {
+func (repo *todostruct) Update(id primitive.ObjectID, todoUpt entity.TodoEntity) (entity.TodoEntity, error) {
 	var todo entity.TodoEntity
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
-	oid, _ := primitive.ObjectIDFromHex(id)
-	result, err := repo.todoColl.UpdateOne(ctx, bson.M{"id":oid}, bson.M{"$set": todoUpt})
+	result, err := repo.todoColl.UpdateOne(ctx, bson.M{"id":id}, bson.M{"$set": todoUpt})
 	if err != nil {
 		return entity.TodoEntity{}, helper.PrintError(err)
 	}
 
 	if result.MatchedCount == 1 {
-		if err := repo.todoColl.FindOne(ctx, bson.M{"id": oid}).Decode(&todo); err != nil {
+		if err := repo.todoColl.FindOne(ctx, bson.M{"id": id}).Decode(&todo); err != nil {
 			return entity.TodoEntity{}, helper.PrintError(err)
 		}
 	}
@@ -94,12 +92,11 @@ func (repo *todostruct) Update(id string, todoUpt entity.TodoEntity) (entity.Tod
 	return todo, nil
 }
 
-func (repo *todostruct) Delete(id string) error {
+func (repo *todostruct) Delete(id primitive.ObjectID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	oid, _ := primitive.ObjectIDFromHex(id)
-	_, err := repo.todoColl.DeleteOne(ctx, bson.M{"id": oid})
+	_, err := repo.todoColl.DeleteOne(ctx, bson.M{"id": id})
 	if err != nil {
 		return err
 	}
