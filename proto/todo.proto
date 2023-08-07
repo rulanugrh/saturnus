@@ -1,0 +1,64 @@
+syntax = "proto3";
+package todo;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "/pb";
+
+service TodoService {
+    rpc CreateProduct(TodoReq) returns (TodoRes);
+    rpc FindById(Id) returns (TodoRes);
+    rpc Update(UpdateTodoReq) returns (TodoRes);
+    rpc Delete(Id) returns (DeleteTodoRes);
+    rpc FindAll(Empty) returns (FindTodoRes);
+}
+
+message Empty{}
+
+message TodoReq {
+    optional string id = 1;
+    string name = 2;
+    Category category = 3;
+    bool isDone = 4;
+    google.protobuf.Timestamp create_at = 5;
+    google.protobuf.Timestamp update_at = 6;
+    google.protobuf.Timestamp delete_at = 7;
+}
+
+message TodoRes {
+    uint64 code = 1;
+    string message = 2;
+    Data data = 3;
+}
+
+message DeleteTodoRes {
+    uint64 code = 1;
+    string message = 2;
+}
+
+message FindTodoRes {
+    repeated Data data = 1;
+}
+
+message UpdateTodoReq {
+    Id id  = 1;
+    TodoReq req = 2;
+}
+
+message Data {
+    string name = 1;
+    Category category = 2;
+    bool isDone = 3;
+    google.protobuf.Timestamp create_at = 4;
+    google.protobuf.Timestamp update_at = 5;
+    google.protobuf.Timestamp delete_at = 6;
+}
+
+message Category {
+    optional string id = 1;
+    string name = 2;
+}
+
+message Id {
+    string id = 1;
+}
