@@ -41,7 +41,7 @@ func main() {
 	maxMsgSize := 1024 * 1024 * 20
 	connGrpc, errCon := grpc.DialContext(
 		context.Background(),
-		dsnHTTP,
+		dsnGRPC,
 		grpc.WithBlock(), 
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize), grpc.MaxCallSendMsgSize(maxMsgSize)),
