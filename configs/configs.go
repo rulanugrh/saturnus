@@ -13,9 +13,10 @@ import (
 )
 
 type App struct {
-	GRPC struct {
-		Host     string
-		Port     string
+	Server struct {
+		Host string
+		HTTPort string
+		GRPCPort string
 	}
 	
 	Database struct {
@@ -24,11 +25,6 @@ type App struct {
 		User string
 		Pass string
 		Name string
-	}
-
-	HTTP struct {
-		Host string
-		Port string
 	}
 }
 
@@ -76,23 +72,21 @@ func initConfig() *App {
 	conf := App{}
 
 	if err := godotenv.Load(); err != nil {
-		conf.GRPC.Port = "localhost"
-		conf.GRPC.Port = ""
+		conf.Server.Host = "localhost"
+		conf.Server.HTTPort = ""
 		conf.Database.Host = ""
 		conf.Database.Port = ""
 		conf.Database.User = ""
 		conf.Database.Name = ""
 		conf.Database.Pass = ""
-		conf.HTTP.Port = ""
-		conf.HTTP.Host = "localhost"
+		conf.Server.GRPCPort = ""
 
 		return &conf
 	}
 
-	conf.GRPC.Host = os.Getenv("GRPC_HOST")
-	conf.GRPC.Port = os.Getenv("GRPC_PORT")
-	conf.HTTP.Port = os.Getenv("HTTP_PORT")
-	conf.HTTP.Host = os.Getenv("HTTP_HOST")
+	conf.Server.Host = os.Getenv("SERVER_HOST")
+	conf.Server.HTTPort = os.Getenv("HTTP_PORT")
+	conf.Server.GRPCPort = os.Getenv("GRPC_PORT")
 	conf.Database.Host = os.Getenv("MONGODB_HOST")
 	conf.Database.Port = os.Getenv("MONGODB_PORT")
 	conf.Database.User = os.Getenv("MONGODB_USER")

@@ -21,8 +21,8 @@ import (
 func main() {
 	conf := configs.GetConfig()
 
-	dsnGRPC := fmt.Sprintf("%s:%s", conf.GRPC.Host, conf.GRPC.Port)
-	dsnHTTP := fmt.Sprintf("%s:%s", conf.HTTP.Host, conf.HTTP.Port)
+	dsnGRPC := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.GRPCPort)
+	dsnHTTP := fmt.Sprintf("%s:%s", conf.Server.Host, conf.Server.HTTPort)
 	listener, err := net.Listen("tcp", dsnGRPC)
 	if err != nil {
 		helper.PrintError(err)
@@ -37,6 +37,11 @@ func main() {
 	serv := grpc.NewServer()
 	pb.RegisterTodoServiceServer(serv, srv)
 
+	go func() {
+		log.Fatalln(serv.Serve(listener))
+	}()
+
+	log.Printf("GRPC Server running on %s:%s", conf.Server.Host, conf.Server.GRPCPort)
 	// create grpc connection for http
 	maxMsgSize := 1024 * 1024 * 20
 	connGrpc, errCon := grpc.DialContext(
@@ -57,17 +62,16 @@ func main() {
 		helper.PrintError(errHttp)
 	}
 
+
 	srvHttpServ := &http.Server {
 		Addr: dsnHTTP,
 		Handler: srvHttp,
 	}
 
-	if errs := serv.Serve(listener); errs != nil {
-		helper.PrintError(errs)
-	}
-
-	fmt.Printf("GRPC Server running on %s:%s", conf.GRPC.Host, conf.GRPC.Port)
 	
-	fmt.Printf("HTTP Server running on %s:%s", conf.HTTP.Host, conf.HTTP.Port)
-	log.Fatalln(srvHttpServ.ListenAndServe())
+	log.Printf("HTTP Server running on %s:%s", conf.Server.Host, conf.Server.HTTPort)
+	if errServHttp := srvHttpServ.ListenAndServe(); errServHttp != nil {
+		helper.PrintError(errServHttp)
+	}
+	
 }
