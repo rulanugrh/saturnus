@@ -1,20 +1,59 @@
 syntax = "proto3";
 package todo;
 
+// Timestampe for get time and annotations to trascoding into http api
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
+// Empty protobuf to use for method GET All data
+import "google/protobuf/empty.proto";
+
+// Path to save my package result generate
 option go_package = "/pb";
 
+// A simple Todo API
+// 
+// The API manage todo and category resources, todo contain the category
 service TodoService {
-    rpc CreateProduct(TodoReq) returns (TodoRes);
-    rpc FindById(Id) returns (TodoRes);
-    rpc Update(UpdateTodoReq) returns (TodoRes);
-    rpc Delete(Id) returns (DeleteTodoRes);
-    rpc FindAll(Empty) returns (stream TodoRes);
+    // Return to create product
+    rpc CreateProduct(TodoReq) returns (TodoRes) {
+        // Define HTTP Mapping
+        // Client example http://<YOUR_DOMAIN>/v1/todo
+        option (google.api.http) = {
+            post: "/v1/todo"
+            body: "todo"
+        };
+    };
+    // Return to find todo by id
+    rpc FindById(Id) returns (TodoRes) {
+        // Define HTTP Mapping
+        // Client example http://<YOUR_DOMAIN>/v1/todo/1
+        option (google.api.http) = { get: "/v1/todo/{id}" };        
+    };
+    // Return to update todo
+    rpc Update(UpdateTodoReq) returns (TodoRes) {
+        // Define HTTP Mapping
+        // Client example http://<YOUR_DOMAIN>/v1/todo/1
+        option (google.api.http) = {
+            put: "/v1/todo/{id}"
+            body: "req"
+        };
+    };
+    // Return to delete todo
+    rpc Delete(Id) returns (DeleteTodoRes) {
+        // Define HTTP Mapping
+        // Cliente example http://<YOUR_DOMAIN>/v1/todo/1
+        option (google.api.http) = { delete: "/v1/todo/{id}" };
+    };
+    // Return to find all todo
+    rpc FindAll(google.protobuf.Empty) returns (FindTodoRes) {
+        // Define HTTP Mapping
+        // Client example http://<YOUR_DOMAIN>/v1/todo
+        option (google.api.http) = { get: "/v1/todo" };
+    };
 }
 
-message Empty{}
-
+// schema for todo input
 message Todo {
     optional string id = 1;
     string name = 2;
@@ -25,26 +64,31 @@ message Todo {
     optional google.protobuf.Timestamp delete_at = 7;
 }
 
+// schme for response todo
 message TodoRes {
     uint64 code = 1;
     string message = 2;
     Data data = 3;
 }
 
+// schema for delete response
 message DeleteTodoRes {
     uint64 code = 1;
     string message = 2;
 }
 
+// schema for find todo response
 message FindTodoRes {
     repeated Data data = 1;
 }
 
+// schema for update todo response
 message UpdateTodoReq {
-    Id id  = 1;
+    string id  = 1;
     TodoReq req = 2;
 }
 
+// Schema Data For Response
 message Data {
     string name = 1;
     Category category = 2;
@@ -54,14 +98,18 @@ message Data {
     google.protobuf.Timestamp delete_at = 6;
 }
 
+// Schema Category
 message Category {
     optional string id = 1;
     string name = 2;
 }
 
+// To get TodoReq
 message TodoReq {
     Todo todo = 1;
 }
+
+// To Get Id
 message Id {
-    optional string id = 1;
+    string id = 1;
 }

@@ -8,6 +8,8 @@ import (
 	"github.com/rulanugrh/saturnus/pb"
 	"github.com/rulanugrh/saturnus/repository"
 	"go.mongodb.org/mongo-driver/mongo"
+	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 type TodoServiceServer struct {
 	pb.UnimplementedTodoServiceServer
@@ -104,7 +106,7 @@ func (td *TodoServiceServer) Update(ctx context.Context, req *pb.UpdateTodoReq) 
 	}
 
 	
-	result, err := td.repo.Update(req.Id.GetId(), &data)
+	result, err := td.repo.Update(req.GetId(), &data)
 	if err != nil {
 		response := &pb.TodoRes{
 			Code: 500,
@@ -153,24 +155,37 @@ func (td *TodoServiceServer) Delete(ctx context.Context, id *pb.Id) (*pb.DeleteT
 	return response, nil
 }
 
-func (td *TodoServiceServer) FindAll(empty *pb.Empty, stream pb.TodoService_FindAllServer) error {
+func (td *TodoServiceServer) FindAll(ctx context.Context, empty *emptypb.Empty) (*pb.FindTodoRes, error) {
 	data, err := td.repo.FindAll()
 	if err != nil {
-		return helper.PrintError(err)
+		return nil, helper.PrintError(err)
 	}
-	for _, todo := range data {
-		stream.Send(&pb.TodoRes{
-			Code: 200,
-			Message: "success find data",
-			Data: &pb.Data{
-				Name: todo.Name,
-				IsDone: todo.IsDone,
-				Category: &pb.Category{
-					Name: todo.Category.Name,
-				},
-			},
-		})
+	var listData []*pb.Data
+	var result *pb.Data
+
+	for _, result = range listData {
+		
+		for _, todo := range data {
+			var createAtt *timestamppb.Timestamp
+			var updateAtt *timestamppb.Timestamp
+			todo.CreateAt = createAtt.AsTime()
+			todo.UpdateAt = updateAtt.AsTime()
+
+			result.Name = todo.Name
+			result.Category.Name = todo.Category.Name
+			result.CreateAt = createAtt
+			result.UpdateAt = updateAtt
+			result.IsDone = todo.IsDone
+		}
+		
+		
+	}
+	listData = append(listData, result)
+
+	FindRes := pb.FindTodoRes {
+		Data: listData,
+	}
+
+	return &FindRes, nil
 	
-	}
-	return nil
 }
