@@ -54,9 +54,8 @@ func (td *TodoServiceServer) CreateProduct(ctx context.Context, req *pb.TodoReq)
 				Name: result.Category.Name,
 			},
 			IsDone: result.IsDone,
-			CreateAt: todo.CreateAt,
-			DeleteAt: todo.UpdateAt,
-			UpdateAt: todo.UpdateAt,
+			CreateAt: timestamppb.New(result.CreateAt),
+			UpdateAt: timestamppb.New(result.UpdateAt),
 		},
 	}
 
@@ -86,6 +85,8 @@ func (td *TodoServiceServer) FindById(ctx context.Context, id *pb.Id) (*pb.TodoR
 			Category: &pb.Category{
 				Name: result.Category.Name,
 			},
+			CreateAt: timestamppb.New(result.CreateAt),
+			UpdateAt: timestamppb.New(result.UpdateAt),
 		},
 	}
 
@@ -126,9 +127,8 @@ func (td *TodoServiceServer) Update(ctx context.Context, req *pb.UpdateTodoReq) 
 				Name: result.Category.Name,
 			},
 			IsDone: result.IsDone,
-			CreateAt: todo.CreateAt,
-			DeleteAt: todo.UpdateAt,
-			UpdateAt: todo.UpdateAt,
+			CreateAt: timestamppb.New(result.CreateAt),
+			UpdateAt: timestamppb.New(result.UpdateAt),
 		},
 	}
 
@@ -155,37 +155,23 @@ func (td *TodoServiceServer) Delete(ctx context.Context, id *pb.Id) (*pb.DeleteT
 	return response, nil
 }
 
-func (td *TodoServiceServer) FindAll(ctx context.Context, empty *emptypb.Empty) (*pb.FindTodoRes, error) {
+func (td *TodoServiceServer) FindAll(empty *emptypb.Empty, stream pb.TodoService_FindAllServer) error {
 	data, err := td.repo.FindAll()
 	if err != nil {
-		return nil, helper.PrintError(err)
+		return helper.PrintError(err)
 	}
-	var listData []*pb.Data
-	var result *pb.Data
-
-	for _, result = range listData {
-		
-		for _, todo := range data {
-			var createAtt *timestamppb.Timestamp
-			var updateAtt *timestamppb.Timestamp
-			todo.CreateAt = createAtt.AsTime()
-			todo.UpdateAt = updateAtt.AsTime()
-
-			result.Name = todo.Name
-			result.Category.Name = todo.Category.Name
-			result.CreateAt = createAtt
-			result.UpdateAt = updateAtt
-			result.IsDone = todo.IsDone
-		}
-		
-		
-	}
-	listData = append(listData, result)
-
-	FindRes := pb.FindTodoRes {
-		Data: listData,
-	}
-
-	return &FindRes, nil
 	
+	for _, result := range data {
+		stream.Send(&pb.Data{
+			Name: result.Name,
+			Category: &pb.Category{
+				Name: result.Category.Name,
+			},
+			IsDone: result.IsDone,
+			CreateAt: timestamppb.New(result.CreateAt),
+			UpdateAt: timestamppb.New(result.UpdateAt),
+		})
+	}
+	
+	return nil
 }

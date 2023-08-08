@@ -46,7 +46,7 @@ service TodoService {
         option (google.api.http) = { delete: "/v1/todo/{id}" };
     };
     // Return to find all todo
-    rpc FindAll(google.protobuf.Empty) returns (FindTodoRes) {
+    rpc FindAll(google.protobuf.Empty) returns (stream Data) {
         // Define HTTP Mapping
         // Client example http://<YOUR_DOMAIN>/v1/todo
         option (google.api.http) = { get: "/v1/todo" };
