@@ -1,0 +1,10 @@
+version: "3"
+services:
+  saturnus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 40000:40000
+      - 8080:8080
+    container_name: saturnus-app
